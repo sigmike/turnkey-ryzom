@@ -1,0 +1,8 @@
+Turnkey Linux patch for Ryzom server
+
+After install you must do the following:
+
+* Connect as root then "su - ryzom"
+* Change FSListenHost in $RYZOM_PATH/server/frontend_service.cfg to your address (e.g. 192.168.0.1).
+* Initialize the database: wget http://dev.ryzom.com/attachments/1151/ryzom.sql -O - | mysql -u root
+* Run the shard: shard start
