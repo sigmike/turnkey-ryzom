@@ -1,0 +1,26 @@
+#!/bin/bash -ex
+install()
+{
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get -y \
+        -o DPkg::Options::=--force-confdef \
+        -o DPkg::Options::=--force-confold \
+        install $@
+}
+
+install libxml2-dev g++ build-essential libtool automake autoconf libpng12-dev \
+  libjpeg62-dev rrdtool libmysqlclient15-dev flex libxmu-dev libfreetype6-dev libgl1-mesa-dev \
+  bison libxxf86vm-dev libxrandr-dev libopenal-dev libogg-dev libvorbis-dev mercurial \
+  libcurl4-openssl-dev libluabind-dev bison libexpat1-dev mercurial
+
+for i in libwww-ssl0_5.4.0-11build2_i386.deb libwww-dev_5.4.0-11build2_i386.deb; do
+  wget http://mirror.ovh.net/ubuntu//pool/universe/w/w3c-libwww/$i
+  dpkg -i $i
+  rm $i
+done
+
+hg clone http://ryzom.hg.sourceforge.net:8000/hgroot/ryzom/ryzom
+
+export RYZOM_PATH=/ryzom/code/ryzom/
+$RYZOM_PATH/tools/scripts/linux/buildmode static
+$RYZOM_PATH/tools/scripts/linux/make_all
