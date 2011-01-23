@@ -1,4 +1,8 @@
-Turnkey Linux patch for Ryzom server
+TurnKey Linux patch to build a Ryzom server appliance.
+
+More infos:
+* TurnKey Linux: http://www.turnkeylinux.org/
+* Ryzom server: http://dev.ryzom.com/
 
 To build the appliance from scratch on Ubuntu:
 * Install tklpatch and git
