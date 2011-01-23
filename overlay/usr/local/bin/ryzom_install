@@ -1,44 +1,60 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 echo "Installing Ryzom server. Based on http://dev.ryzom.com/wiki/ryzom/EverythingServerUbuntu"
 
-echo "Download and install libwww:"
+[ -d ~/source ] || mkdir ~/source
 
-mkdir ~/source && cd ~/source
-wget http://mirror.ovh.net/ubuntu//pool/universe/w/w3c-libwww/libwww-ssl0_5.4.0-11build2_i386.deb
-wget http://mirror.ovh.net/ubuntu//pool/universe/w/w3c-libwww/libwww-dev_5.4.0-11build2_i386.deb
-sudo dpkg -i libwww-dev_5.4.0-11build2_i386.deb libwww-ssl0_5.4.0-11build2_i386.deb
+if [ ! -e /usr/bin/libwww-config ]; then
+  echo "Download and install libwww:"
+  cd ~/source
+  wget http://mirror.ovh.net/ubuntu//pool/universe/w/w3c-libwww/libwww-ssl0_5.4.0-11build2_i386.deb
+  wget http://mirror.ovh.net/ubuntu//pool/universe/w/w3c-libwww/libwww-dev_5.4.0-11build2_i386.deb
+  sudo dpkg -i libwww-dev_5.4.0-11build2_i386.deb libwww-ssl0_5.4.0-11build2_i386.deb
+fi
 
-
-echo "Download and build luabind:"
-
-wget http://ovh.dl.sourceforge.net/project/luabind/luabind/0.9/luabind-0.9.tar.gz
-tar xvfz luabind-0.9.tar.gz
-cd luabind-0.9
-sudo bjam --prefix=/usr/local install
-
-
-echo "Download ryzom source code:"
+if [ ! -e /usr/local/lib/libluabindd.so ]; then
+  echo "Download and build luabind:"
+  cd ~/source
+  wget http://ovh.dl.sourceforge.net/project/luabind/luabind/0.9/luabind-0.9.tar.gz
+  tar xvfz luabind-0.9.tar.gz
+  cd luabind-0.9
+  sudo bjam --prefix=/usr/local install
+fi
 
 cd ~/source
-hg clone http://ryzom.hg.sourceforge.net:8000/hgroot/ryzom/ryzom
-cp -R ~/source/ryzom/code ~/code
+if [ -d ryzom/.hg ]; then
+  echo "Update ryzom source code:"
+  cd ryzom
+  hg pull
+  hg update
+else
+  echo "Download ryzom source code:"
+  hg clone http://ryzom.hg.sourceforge.net:8000/hgroot/ryzom/ryzom
+fi
 
 
-echo "Set environment variable to bash:"
+if grep RYHOME ~/.bashrc >/dev/null; then
+  echo "Environment variable already set in bashrc"
+else
+  echo "Set environment variable to bash:"
+  echo "export RYHOME=~/source/ryzom/code" >> ~/.bashrc
+  echo "export RYZOM_PATH=~/source/ryzom/code/ryzom" >> ~/.bashrc
+  echo "export PATH=\$PATH:\$RYZOM_PATH/tools/scripts/linux" >> ~/.bashrc
+fi
 
-echo "export RYHOME=~/code" >> ~/.bashrc
-echo "export RYZOM_PATH=~/code/ryzom" >> ~/.bashrc
-echo "export PATH=\$PATH:\$RYZOM_PATH/tools/scripts/linux" >> ~/.bashrc
-. ~/.bashrc
+export RYHOME=~/source/ryzom/code
+export RYZOM_PATH=~/source/ryzom/code/ryzom
+export PATH=$PATH:$RYZOM_PATH/tools/scripts/linux
 
 
 echo "Configuration option are set to build only nel & server (in static: http://dev.ryzom.com/wiki/ryzom/BuildForLinuxCmake#Server-Chain-Crashing see also CMakeOptions):"
 
-mkdir $RYHOME/build && cd $RYHOME/build
+[ -d $RYHOME/build ] || mkdir $RYHOME/build
+cd $RYHOME/build
+
 cmake -DWITH_NEL=ON -DWITH_RYZOM_SERVER=ON -DWITH_STATIC=ON -DWITH_DRIVER_STATIC=ON \
--DWITH_RYZOM_CLIENT=OFF -DWITH_DRIVER_OPENGL=OFF -DWITH_DRIVER_OPENAL=OFF -DWITH_SOUND=OFF \
--DWITH_NEL_TOOLS=OFF -DWITH_RYZOM_TOOLS=OFF -DWITH_NEL_TESTS=OFF -DWITH_NEL_SAMPLES=OFF ..
+  -DWITH_RYZOM_CLIENT=OFF -DWITH_DRIVER_OPENGL=OFF -DWITH_DRIVER_OPENAL=OFF -DWITH_SOUND=OFF \
+  -DWITH_NEL_TOOLS=OFF -DWITH_RYZOM_TOOLS=OFF -DWITH_NEL_TESTS=OFF -DWITH_NEL_SAMPLES=OFF ..
 
 
 echo "Build and install:"
