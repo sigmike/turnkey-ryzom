@@ -8,19 +8,24 @@ install()
         install $@
 }
 
-install libxml2-dev g++ build-essential libtool automake autoconf libpng12-dev \
-  libjpeg62-dev rrdtool libmysqlclient15-dev flex libxmu-dev libfreetype6-dev libgl1-mesa-dev \
-  bison libxxf86vm-dev libxrandr-dev libopenal-dev libogg-dev libvorbis-dev mercurial \
-  libcurl4-openssl-dev libluabind-dev bison libexpat1-dev mercurial
+install sudo cmake bison build-essential boost-build mercurial screen apache2 mysql-server phpmyadmin rrdtool \
+  libgl1-mesa-dev libopenal-dev libogg-dev libvorbis-dev libluabind-dev libfreetype6-dev \
+  libpng12-dev libjpeg62-dev libx11-dev libxxf86vm-dev libxrandr-dev libxrender-dev \
+  libcurl4-openssl-dev libxmu-dev libexpat1-dev libxml2-dev libmysqlclient-dev zlib1g-dev
 
-for i in libwww-ssl0_5.4.0-11build2_i386.deb libwww-dev_5.4.0-11build2_i386.deb; do
-  wget http://mirror.ovh.net/ubuntu//pool/universe/w/w3c-libwww/$i
-  dpkg -i $i
-  rm $i
-done
+adduser ryzom --disabled-password --gecos ''
 
-hg clone http://ryzom.hg.sourceforge.net:8000/hgroot/ryzom/ryzom
+cat >/etc/sudoers.d/ryzom <<EOF
+ryzom  ALL=(ALL) NOPASSWD: ALL
+EOF
+chmod 0440 /etc/sudoers.d/ryzom
 
-export RYZOM_PATH=/ryzom/code/ryzom/
-$RYZOM_PATH/tools/scripts/linux/buildmode static
-$RYZOM_PATH/tools/scripts/linux/make_all
+su ryzom -c /usr/local/bin/ryzom_install
+
+HOSTNAME=ryzom
+echo "$HOSTNAME" > /etc/hostname
+sed -i "s|127.0.1.1 \(.*\)|127.0.1.1 $HOSTNAME|" /etc/hosts
+
+rm -r /var/cache/apt/*
+mkdir /var/cache/apt/archives
+mkdir /var/cache/apt/archives/partial

@@ -1,0 +1,122 @@
+#!/bin/bash -ex
+
+echo "Installing Ryzom server. Based on http://dev.ryzom.com/wiki/ryzom/EverythingServerUbuntu"
+
+echo "Download and install libwww:"
+
+mkdir ~/source && cd ~/source
+wget http://mirror.ovh.net/ubuntu//pool/universe/w/w3c-libwww/libwww-ssl0_5.4.0-11build2_i386.deb
+wget http://mirror.ovh.net/ubuntu//pool/universe/w/w3c-libwww/libwww-dev_5.4.0-11build2_i386.deb
+sudo dpkg -i libwww-dev_5.4.0-11build2_i386.deb libwww-ssl0_5.4.0-11build2_i386.deb
+
+
+echo "Download and build luabind:"
+
+wget http://ovh.dl.sourceforge.net/project/luabind/luabind/0.9/luabind-0.9.tar.gz
+tar xvfz luabind-0.9.tar.gz
+cd luabind-0.9
+sudo bjam --prefix=/usr/local install
+
+
+echo "Download ryzom source code:"
+
+cd ~/source
+hg clone http://ryzom.hg.sourceforge.net:8000/hgroot/ryzom/ryzom
+cp -R ~/source/ryzom/code ~/code
+
+
+echo "Set environment variable to bash:"
+
+echo "export RYHOME=~/code" >> ~/.bashrc
+echo "export RYZOM_PATH=~/code/ryzom" >> ~/.bashrc
+echo "export PATH=\$PATH:\$RYZOM_PATH/tools/scripts/linux" >> ~/.bashrc
+. ~/.bashrc
+
+
+echo "Configuration option are set to build only nel & server (in static: http://dev.ryzom.com/wiki/ryzom/BuildForLinuxCmake#Server-Chain-Crashing see also CMakeOptions):"
+
+mkdir $RYHOME/build && cd $RYHOME/build
+cmake -DWITH_NEL=ON -DWITH_RYZOM_SERVER=ON -DWITH_STATIC=ON -DWITH_DRIVER_STATIC=ON \
+-DWITH_RYZOM_CLIENT=OFF -DWITH_DRIVER_OPENGL=OFF -DWITH_DRIVER_OPENAL=OFF -DWITH_SOUND=OFF \
+-DWITH_NEL_TOOLS=OFF -DWITH_RYZOM_TOOLS=OFF -DWITH_NEL_TESTS=OFF -DWITH_NEL_SAMPLES=OFF ..
+
+
+echo "Build and install:"
+
+make -j3
+sudo make install
+
+
+echo "Copy the compiled binaries to their proper locations:"
+
+cp $RYHOME/build/bin/ryzom_admin_service $RYZOM_PATH/server/src/ryzom_admin_service/ryzom_admin_service
+cp $RYHOME/build/bin/ryzom_ai_service $RYZOM_PATH/server/src/ai_service/ai_service
+cp $RYHOME/build/bin/ryzom_backup_service $RYZOM_PATH/server/src/backup_service/backup_service
+cp $RYHOME/build/bin/ryzom_dynamic_scenario_service $RYZOM_PATH/server/src/dynamic_scenario_service/dynamic_scenario_service
+cp $RYHOME/build/bin/ryzom_entities_game_service $RYZOM_PATH/server/src/entities_game_service/entities_game_service
+cp $RYHOME/build/bin/ryzom_frontend_service $RYZOM_PATH/server/src/frontend_service/frontend_service
+cp $RYHOME/build/bin/ryzom_gpm_service $RYZOM_PATH/server/src/gpm_service/gpm_service
+cp $RYHOME/build/bin/ryzom_ios_service $RYZOM_PATH/server/src/input_output_service/input_output_service
+cp $RYHOME/build/bin/ryzom_log_analyser_service $RYZOM_PATH/server/src/log_analyser_service/log_analyser_service
+cp $RYHOME/build/bin/ryzom_logger_service $RYZOM_PATH/server/src/logger_service/logger_service
+cp $RYHOME/build/bin/ryzom_mail_forum_service $RYZOM_PATH/server/src/mail_forum_service/mail_forum_service
+cp $RYHOME/build/bin/ryzom_mirror_service $RYZOM_PATH/server/src/mirror_service/mirror_service
+cp $RYHOME/build/bin/ryzom_naming_service $RYZOM_PATH/server/src/ryzom_naming_service/ryzom_naming_service
+cp $RYHOME/build/bin/ryzom_pd_support_service $RYZOM_PATH/server/src/pd_support_service/pd_support_service
+cp $RYHOME/build/bin/ryzom_persistant_data_service $RYZOM_PATH/server/src/persistant_data_service/persistant_data_service
+cp $RYHOME/build/bin/ryzom_reference_builder_service $RYZOM_PATH/server/src/pd_reference_builder/pd_reference_builder
+cp $RYHOME/build/bin/ryzom_session_browser_service $RYZOM_PATH/server/src/session_browser_server/session_browser_server
+cp $RYHOME/build/bin/ryzom_shard_unifier_service $RYZOM_PATH/server/src/shard_unifier_service/shard_unifier_service
+cp $RYHOME/build/bin/ryzom_tick_service $RYZOM_PATH/server/src/tick_service/tick_service
+cp $RYHOME/build/bin/ryzom_welcome_service $RYZOM_PATH/server/src/ryzom_welcome_service/ryzom_welcome_service
+
+
+echo "Configure Ryzom OpenShard server"
+echo "Fix shell problems:"
+
+sed -i 's:/bin/sh:/bin/bash:g' $RYZOM_PATH/tools/scripts/linux/shard
+sed -i 's:/bin/sh:/bin/bash:g' $RYZOM_PATH/server/shard.screen.rc
+
+exit 0
+
+# echo "Edit different files to match our server configuration :"
+# 
+# FSListenHost = "your.server.ip.adress";
+# 
+# nano $RYZOM_PATH/server/frontend_service.cfg
+# define('NELTOOL_SYSTEMBASE','/home/ryzom/code/ryzom/tools/server/admin/');
+# 
+# nano $RYZOM_PATH/tools/server/admin/config.php
+# $LogRelativePath = './logs';
+# 
+# nano $RYZOM_PATH/tools/server/www/login/config.php
+
+
+echo "Create missing directory and set permissions:"
+
+mkdir $RYZOM_PATH/server/save_shard/rrd_graphs/
+mkdir $RYZOM_PATH/tools/server/www/login/logs/
+chmod o+w $RYZOM_PATH/tools/server/www/login/logs/
+chmod o+w $RYZOM_PATH/tools/server/admin/graphs_output
+cp -r $RYZOM_PATH/tools/server/admin/templates/default $RYZOM_PATH/tools/server/admin/templates/default_c
+chmod o+w $RYZOM_PATH/tools/server/admin/templates/default_c
+
+
+# echo "Configure Apache2 Web Server & MySQL Database"
+# echo "Replace the content with: http://dev.ryzom.com/attachments/1150/default"
+# 
+# sudo nano /etc/apache2/sites-available/default
+# Restart apache2 service:
+# 
+# sudo service apache2 restart
+
+
+# echo "Then, go to: http://your.server.ip.adress/phpmyadmin and import http://dev.ryzom.com/attachments/1151/ryzom.sql to setup the database."
+# 
+# Run the Shard
+# shard start
+# The Shard is running in screen, so you can monitor each of the running service by: CTRL+A, N
+# Alternatively, you can use the web-Admin interface: http://your.server.ip.adress (default login: guest/guest or admin/guest)
+# To stop the Shard:
+# detached screen by pressing CTRL+A, D
+# shard stop
