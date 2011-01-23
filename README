@@ -1,8 +1,38 @@
 Turnkey Linux patch for Ryzom server
 
-After install you must do the following:
+To build the appliance from scratch on Ubuntu:
+* Install tklpatch and git
+  sudo apt-get install tklpatch git-core
+
+* Create a working directory
+  mkdir ryzom_appliance
+  cd ryzom_appliance
+
+* Download TurnKey Core from http://www.turnkeylinux.org/core
+  wget http://ovh.dl.sourceforge.net/project/turnkeylinux/turnkey-core/11.0-lucid-x86/turnkey-core-11.0-lucid-x86.iso
+
+* Clone this patch repository
+  git clone git://github.com/piglop/turnkey-ryzom.git
+
+* Patch the ISO (it may take several hours to patch, the whole server is downloaded and built):
+  sudo tklpatch turnkey-core-11.0-lucid-x86.iso turnkey-ryzom/
+
+* Rename the ISO:
+  mv turnkey-core-11.0-lucid-x86-patched.iso turnkey-ryzom.iso
+
+* Choose a method to install the appliance from the ISO from http://www.turnkeylinux.org/docs
+
+
+After the appliance has been installed, you must finish the installation:
 
 * Connect as root then "su - ryzom"
 * Change FSListenHost in $RYZOM_PATH/server/frontend_service.cfg to your address (e.g. 192.168.0.1).
 * Initialize the database: wget http://dev.ryzom.com/attachments/1151/ryzom.sql -O - | mysql -u root
 * Run the shard: shard start
+
+
+To connect with the official client, you must add this to your client.cfg:
+  StartupHost          = "<the server's IP address>:40916";
+  Application          = {
+    "ryzom_open", "./client_ryzom_r.exe", "./" 
+  };
