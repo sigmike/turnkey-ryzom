@@ -107,7 +107,7 @@ sed -i "s|define('NELTOOL_SYSTEMBASE','\(.*\)');|define('NELTOOL_SYSTEMBASE','$R
 # $LogRelativePath = './logs';
 # 
 # nano $RYZOM_PATH/tools/server/www/login/config.php
-sed -i "s|$LogRelativePath = '\(.*\)';|$LogRelativePath =./logs';|" $RYZOM_PATH/tools/server/www/login/config.php
+sed -i "s|$LogRelativePath = '\(.*\)';|$LogRelativePath = './logs';|" $RYZOM_PATH/tools/server/www/login/config.php
 
 
 echo "Create missing directory and set permissions:"
